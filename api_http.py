@@ -1,3 +1,4 @@
+##The script asks a space API when the ISS will pass over a location and shows you the reply plus server details.
 import requests   
 query = {'lat':'45', 'lon':'180'}
 try:
@@ -22,3 +23,4 @@ for header, value in response.headers.items():
 
     
     
+
