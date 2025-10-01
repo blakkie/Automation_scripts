@@ -1,18 +1,24 @@
-# Automation_scripts
+# 🛡️ Automation Scripts
 
-Collection of Python scripts for lab automation and learning — intended for authorized, lab-only use by offensive/defensive engineers.
+This repository contains Python scripts for security Engineers and for educational testing.
 
-## Contents
-- `scripts/Password_Cracker.py` - dictionary & passlib-based cracker (educational)
-- `scripts/passwd_cracker.py` - modern hash support
-- `scripts/ip_scan.py` - simple IP scanner
-- `scripts/tcp_server.py` - test TCP server
-- `examples/` - example usage & command lines
+- `scripts/Password_Cracker.py` → dictionary-based password cracking
+- `scripts/passwd_cracker.py` → SHA-512 + passlib support
+- `scripts/ip_scan.py` → simple IP scanner
+- `scripts/tcp_server.py` → TCP server for testing
 
-## How to use sripts
-
-git clone https://github.com/yourusername/Automation_scripts.git
+## 🚀 Quickstart
+```bash
+git clone https://github.com/YOUR_USERNAME/Automation_scripts.git
 cd Automation_scripts
-python -m venv .venv
-source .venv/bin/activate
 pip install -r requirements.txt
+
+Launch
+python -m venv venv
+source venv/bin/activate   # Linux/Mac
+venv\Scripts\activate      # Windows
+
+
+🛠 Requirements
+Python 3.8+
+Modules listed in requirements.txt (e.g., passlib, cryptography)
