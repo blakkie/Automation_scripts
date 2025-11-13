@@ -1,8 +1,8 @@
 '''
-Description: Hardened IOC extractor with OWASP-aligned security practices
+Description: Hardened IOC extractor with best security practices
 - Reads plain text (file/stdin/Excel), extracts IOCs (IPs, domains, urls, hashes)
 - Deduplicates with sets
-- Chunks into groups and outputs JSON securely
+- Chunks into groups and outputs JSON securely as arrays
 '''
 
 import sys, re, json, ipaddress, logging, os
@@ -44,7 +44,16 @@ domain_regex = re.compile(
     re.IGNORECASE
 )
 
-# sanitize input against injection attacks, path traversal!
+#functions we will use for this experiment
+def main_functions():
+    sanitize_value()
+    load_input()
+    iocs_extract()
+    chunked()
+    make_chunk_objects()
+    main()
+
+# sanitize inputs
 def sanitize_value(val: str) -> str:
     return re.sub(r"[^\w\.\-:/]", "", val.strip())
 
@@ -126,10 +135,17 @@ def make_chunk_objects(items: List[str], prefix: str, kind: str, desc_base: str,
     chunks = list(chunked(items, chunk_size))
     objects = []
     for i, chunk in enumerate(chunks, 1):
+        kind_mapping = {
+            "ips": "IPs",
+            "hashes": "Hashes",
+            "urls": "Urls",
+            "domains": "Domains"
+        }
+
         obj = {
-            "Type": kind,
-            "Description": f"{desc_base} (chunk {i}/{len(chunks)})",
-            "Values": chunk
+            "name": f"Esen_Malicious_{kind_mapping.get(kind, kind.title())}_{i:02d}",
+            "description": f"Validated {kind_mapping.get(kind, kind.upper())}",
+            "items": chunk
         }
         filename = f"{prefix}_{kind}_{i}_{uuid4().hex}.json"
         objects.append((filename, obj))
@@ -148,7 +164,16 @@ def main():
         print("Paste your text here (end with ENTER + Ctrl+D / Ctrl+Z):")
         text = sys.stdin.read()
 
-    chunk_size = int(input("Enter chunk size (default 1000): ") or "1000")
+    # Get chunk size with validation
+    while True:
+        chunk_input = input("Enter chunk size (maximum 1000): ").strip()
+        chunk_size = int(chunk_input or "1000")
+        
+        if chunk_size <= 1000 and chunk_size > 0:
+            break
+        else:
+            print("Error: Chunk size must be between 1 and 1000. Please try again.")
+    
     output_dir = Path("output_json").resolve()
     output_dir.mkdir(exist_ok=True)
 
@@ -157,9 +182,16 @@ def main():
     # Process each IOC type separately
     for kind, values in iocs.items():
         objects = make_chunk_objects(values, str(output_dir / "ioc"), kind, f"Extracted {kind}", chunk_size)
-        for filename, obj in objects:
-            Path(filename).write_text(json.dumps(obj, indent=2), encoding="utf-8")
-            logging.info("Written %d %s to %s", len(obj["Values"]), kind, filename)
+        
+        # Collect all objects into an array (without filenames)
+        all_objects = [obj for filename, obj in objects]
+        
+        # Write as single JSON array file
+        output_file = output_dir / f"ioc_{kind}_{uuid4().hex}.json"
+        output_file.write_text(json.dumps(all_objects, indent=2), encoding="utf-8")
+        
+        logging.info("Written %d %s in %d chunks to %s", 
+                     len(values), kind, len(all_objects), output_file)
 
     logging.info("Extraction complete. %d IPs, %d hashes, %d URLs, %d domains.",
                  len(iocs["ips"]), len(iocs["hashes"]), len(iocs["urls"]), len(iocs["domains"]))
