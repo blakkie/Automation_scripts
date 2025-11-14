@@ -179,19 +179,34 @@ def main():
 
     iocs = iocs_extract(text)
 
-    # Process each IOC type separately
+    # Process each IOC type separately with STRICT limit
     for kind, values in iocs.items():
-        objects = make_chunk_objects(values, str(output_dir / "ioc"), kind, f"Extracted {kind}", chunk_size)
+        if not values:
+            continue
+            
+        # Limit to chunk_size items ONLY
+        limited_values = values[:chunk_size]
         
-        # Collect all objects into an array (without filenames)
-        all_objects = [obj for filename, obj in objects]
+        # Create single object (no chunking)
+        kind_mapping = {
+            "ips": "IPs",
+            "hashes": "Hashes",
+            "urls": "Urls",
+            "domains": "Domains"
+        }
         
-        # Write as single JSON array file
+        single_object = {
+            "name": f"Esen_Malicious_{kind_mapping.get(kind, kind.title())}_01",
+            "description": f"Validated {kind_mapping.get(kind, kind.upper())}",
+            "items": limited_values
+        }
+        
+        # Write as single JSON file
         output_file = output_dir / f"ioc_{kind}_{uuid4().hex}.json"
-        output_file.write_text(json.dumps(all_objects, indent=2), encoding="utf-8")
+        output_file.write_text(json.dumps([single_object], indent=2), encoding="utf-8")
         
-        logging.info("Written %d %s in %d chunks to %s", 
-                     len(values), kind, len(all_objects), output_file)
+        logging.info("Written %d %s (limited from %d) to %s", 
+                     len(limited_values), kind, len(values), output_file)
 
     logging.info("Extraction complete. %d IPs, %d hashes, %d URLs, %d domains.",
                  len(iocs["ips"]), len(iocs["hashes"]), len(iocs["urls"]), len(iocs["domains"]))
