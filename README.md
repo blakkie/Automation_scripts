@@ -22,4 +22,4 @@ venv\Scripts\activate      # Windows
 🛠 Requirements
 Python 3.8+
 Modules listed in requirements.txt (e.g., passlib, cryptography)
-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
+
